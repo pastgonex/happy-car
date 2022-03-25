@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<!-- 
+css选择器 在浏览器的inspect中 command f
+class 通过 .xxx-->
+
+<body>
+    <div>
+        <!-- #title -->
+        <div id="title">快乐车来</div>
+        <div>css (Cascading[层叠] Style Sheets) </div>
+    </div>
+    <!-- .iterm -->
+    <div class="trips" style="height: 150px; overflow:visible;">
+        <div class="iterm blue">
+            <div>中关村到天安门</div>
+            <div>价格: 120元</div>
+        </div>
+        <div class="iterm red">
+            <div>陆家嘴到迪士尼</div>
+            <div>价格: 50元</div>
+            <div class="star"></div>
+        </div>
+        <div class="iterm blue" style="white-space:nowrap">
+            <div style="display: inline-block; width:50%; overflow: hidden; text-overflow:ellipsis">天河体育中心到广州塔</div>
+            <div style="display: inline; vertical-align: top">价格: 80元</div>
+        </div>
+    </div>
+</body>
+
+<style>
+    div {
+        font-size: x-large;
+    }
+
+    #title {
+        font-size: 30px;
+    }
+
+    .red {
+        color: red;
+    }
+
+    .blue {
+        color: blue;
+    }
+
+    .iterm.blue {
+        color: cornflowerblue;
+    }
+
+    .iterm {
+        border: 2px solid;
+    }
+
+    .iterm.red {
+        position: relative;
+    }
+
+    .star {
+        width: 20px;
+        height: 20px;
+        background-color: red;
+        /* 飘着， 不要占坑 */
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+</style>
+
+</html>

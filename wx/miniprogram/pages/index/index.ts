@@ -1,4 +1,5 @@
 Page({
+  isPageShowing: false,
   data: {
     setting: {
       skew: 0,
@@ -22,7 +23,7 @@ Page({
     scale: 10,
     markers: [{
       iconPath: "/resources/car.png",
-      id: 1,
+      id: 0,
       latitude: 23.099994,
       longitude: 113.324520,
       width: 25,
@@ -36,6 +37,12 @@ Page({
       width: 25,
       height: 25,
     }],
+  },
+  onShow() {
+    this.isPageShowing = true
+  },
+  onHide() {
+    this.isPageShowing = false
   },
   onMyLocationTap() {
     wx.getLocation({
@@ -55,5 +62,56 @@ Page({
         })
       }
     })
+  },
+  onScanClicked() {
+    wx.scanCode({
+      // onlyFromCamera: false,
+      success: res => {
+        console.log(res)
+        wx.navigateTo({
+          url: '/pages/register/register',
+        })
+        // todo
+
+      },
+      fail: res => {
+        console.log(res)
+      }
+    })
+  },
+  moveCars() {
+    const map = wx.createMapContext("map") // map的id
+    const dest = {
+      // latitude: 23.099994,
+      // longitude: 113.324520,
+      latitude: this.data.markers[0].latitude,
+      longitude: this.data.markers[0].longitude,
+    }
+    // 做成一个回调函数，每隔一段时间调用一次
+    const moveCar = () => {
+      dest.latitude += 0.1
+      dest.longitude += 0.1
+      map.translateMarker({
+        destination: {
+          latitude: dest.latitude,
+          longitude: dest.longitude,
+        },
+        markerId: 0,
+        autoRotate: false,
+        rotate: 0,
+        duration: 5000,
+        animationEnd: () => {
+          if (this.isPageShowing) {
+            this.data.markers[0].latitude = dest.latitude
+            this.data.markers[0].longitude = dest.longitude
+            moveCar()
+          } else {
+            this.data.markers[0].latitude = dest.latitude
+            this.data.markers[0].longitude = dest.longitude
+          }
+        },
+      })
+    }
+    moveCar()
   }
 })

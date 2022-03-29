@@ -1,0 +1,49 @@
+/* pages/register/register.wxss */
+
+.lic-tamplate {
+    width: 600rpx;
+    height: 450rpx;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.stretch {
+    width: 100%;
+    height: 100%;
+}
+
+.lic-tamplate-img {
+    position: absolute;
+    opacity: .2;
+}
+
+.cuIcon-camerafill {
+    position: absolute;
+    font-size: 172rpx;
+}
+
+.instruction {
+    position: absolute;
+    bottom: -74rpx;
+    font-size: 35rpx;
+}
+
+.lic-form {
+    width: 600rpx;
+}
+
+/* 从colorUi中粘过来的 */
+.cu-form-group .title {
+    min-width: calc(4em + 30rpx);
+}
+
+.check-ok {
+    position: absolute;
+    display: flex;
+    top: 0;
+    right: 0;
+    width: 20%;
+    height: 20%;
+}

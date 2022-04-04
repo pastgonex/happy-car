@@ -1,9 +1,13 @@
+import { routing } from "../../utils/routing"
+
 // pages/register/register.ts
 Page({
 
   /**
    * Page initial data
    */
+  redirectURL: '',
+
   data: {
     genders: ['未知', '男', '女', '其他'],
     genderIndex: 0,
@@ -18,8 +22,12 @@ Page({
   /**
    * Lifecycle function--Called when page load
    */
-  onLoad() {
-
+  onLoad(opt: Record<'redirect', string>) {
+    const o: routing.RegisterOpts = opt
+    if (o.redirect) {
+      this.redirectURL = decodeURIComponent(o.redirect)
+      // console.log(this.redirectURL)
+    }
   },
 
   /**
@@ -85,7 +93,7 @@ Page({
               licNo: '12345678901234567890',
               name: 'Ever Ni',
               genderIndex: 1,
-              birthDate: '20000-08-05'
+              birthDate: '2000-08-05'
             })
           })
         }
@@ -99,7 +107,7 @@ Page({
 
     })
   },
-  
+
   // 日期选择后的结果
   onBirthDateChange(e: any) {
     this.setData({
@@ -128,10 +136,11 @@ Page({
   onLicVerified() {
     this.setData({
       state: 'VERIFIED',
-    }),
-    // 审查结束之后， 跳转到开锁页面
-    wx.redirectTo({
-      url: '/pages/unlock/unlock',
     })
-  }
+    if (this.redirectURL) {
+      wx.redirectTo ({
+        url: this.redirectURL,
+      })
+    }
+  },
 })

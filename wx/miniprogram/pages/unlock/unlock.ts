@@ -1,3 +1,5 @@
+import { routing } from "../../utils/routing"
+
 // pages/unlock/unlock.ts
 const shareLocationKey = "share_location"
 const shareUserInfo = "share_userInfo"
@@ -18,7 +20,9 @@ Page({
   /**
    * Lifecycle function--Called when page load
    */
-  onLoad() {
+  onLoad(opt: Record<'car_id', string>) {
+    const o: routing.LockOpts = opt
+    console.log('unlocking car', o.car_id)
     if (wx.getUserProfile) {
       this.setData({
         canIUseGetUserProfile: true,
@@ -123,13 +127,17 @@ Page({
           avatarUrl: this.data.shareLocation ? this.data.avatarUrl : '',
           carID: 0
         })
+        const tripID = 'trip456'
         wx.showLoading({
           title: '开锁中',
           mask: true, // 让页面不能点击
         })
         setTimeout(() => {
           wx.redirectTo({
-            url: '/pages/driving/driving',
+            //url: `/pages/driving/driving?trip_id=${tripID}`,
+            url: routing.driving({
+              trip_id: tripID,
+            }),
             complete: () => {
               wx.hideLoading()
             }

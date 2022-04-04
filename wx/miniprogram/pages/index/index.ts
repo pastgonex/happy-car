@@ -1,6 +1,9 @@
+import { routing } from "../../utils/routing"
+
 Page({
   isPageShowing: false,
   data: {
+    userInfo: {},
     setting: {
       skew: 0,
       rotate: 0,
@@ -38,8 +41,14 @@ Page({
       height: 25,
     }],
   },
+  async onLoad() {
+    const UserInfo = await getApp<IAppOption>().globalData.userInfo
+    this.setData({
+      userInfo: UserInfo
+    })
+  },
   onShow() {
-    this.isPageShowing = true
+
   },
   onHide() {
     this.isPageShowing = false
@@ -63,16 +72,38 @@ Page({
       }
     })
   },
-  onScanClicked() {
+  onScanTap() {
     wx.scanCode({
       // onlyFromCamera: false,
-      success: res => {
-        console.log(res)
-        wx.navigateTo({
-          url: '/pages/register/register',
-        })
-        // todo
+      success: () => {
+        wx.showModal({
+          title: "身份认证",
+          content: "需要身份认证才能租车",
+          success: (res) => {
+            if (res.confirm) {
+              // console.log(res)
+              // todo get car id from scan result 
+              const carID = 'car123'
+              // const redirectURL = `/pages/unlock/unlock?car_id=${carID}`
+              const redirectURL = routing.unlock({
+                car_id: carID
+              })
+              wx.navigateTo({
+                // url: `/pages/register/register?redirect=${encodeURIComponent(redirectURL)}`,
+                url: routing.register({
+                  redirectURL: redirectURL
+                })
+              })
+              // todo
+            } else if (res.cancel) {
+              console.log('用户点击取消')
+            }
 
+          },
+          fail: () => {
+
+          }
+        })
       },
       fail: res => {
         console.log(res)
@@ -113,5 +144,11 @@ Page({
       })
     }
     moveCar()
+  },
+  onMyTripsTap() {
+    wx.navigateTo({
+      // url: '/pages/mytrips/mytrips',
+      url: routing.mytrips()
+    })
   }
-})
+})   

@@ -1,6 +1,10 @@
 {
   "pages": [
-    "pages/index/index"
+    "pages/index/index",
+    "pages/register/register",
+    "pages/unlock/unlock",
+    "pages/driving/driving",
+    "pages/mytrips/mytrips"
   ],
   "window": {
     "backgroundTextStyle": "light",

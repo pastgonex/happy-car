@@ -20,7 +20,7 @@ page {
   /* border:2rpx solid pink; */
 }
 
-.icon-container cover-image {
+.icon-container image {
   width: 80rpx;
   height: 80rpx;
   /* border: 2rpx solid black; */

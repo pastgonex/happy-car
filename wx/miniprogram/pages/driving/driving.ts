@@ -1,5 +1,7 @@
 // pages/driving/driving.ts
 
+import { routing } from "../../utils/routing"
+
 const centPerSec = 0.7
 
 const updateIntervalSec = 5
@@ -8,7 +10,7 @@ const initialLng = 120
 
 function formatDuration(sec: number) {
   const padString = (n: number) => {
-    return n < 10 ? '0'+n.toFixed(0) : n.toFixed(0)
+    return n < 10 ? '0' + n.toFixed(0) : n.toFixed(0)
   }
   const h = Math.floor(sec / 3600)
   sec -= 3600 * h
@@ -53,7 +55,10 @@ Page({
   /**
    * Lifecycle function--Called when page load
    */
-  onLoad() {
+  //               这种写法， 定死了只能写 trip_id, 符合了接口的规定
+  onLoad(opt: Record<'trip_id', string>) {
+    const o: routing.DrivingOpts = opt
+    console.log('current trip', o.trip_id)
     this.setupLocationUpdator()
     this.setupTimer()
   },
@@ -139,8 +144,10 @@ Page({
       })
     }, 1000)
   },
-  
-  onEndTripTap() {
 
+  onEndTripTap() {
+    wx.redirectTo({
+      url: routing.mytrips(),
+    })
   }
 })

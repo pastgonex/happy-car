@@ -4,7 +4,7 @@ import { routing } from "../../utils/routing"
 
 const centPerSec = 0.7
 
-const updateIntervalSec = 5
+// const updateIntervalSec = 5
 const initialLat = 30
 const initialLng = 120
 

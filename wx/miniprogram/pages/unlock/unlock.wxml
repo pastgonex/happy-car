@@ -16,7 +16,7 @@
             <switch bindchange="onShareLocation" checked="{{shareLocation}}" />
         </view> -->
         <block wx:if="{{!hasUserInfo}}">
-            <button wx:if="{{canIUseGetUserProfile}}" class="cu-avatar round lg bg-grey margin-xs" bindtap="getUserProfile">
+            <button wx:if="{{canIUseGetUserProfile}}" class="cu-avatar round lg bg-grey margin-xs" open-type="getUserProfile" bindtap="getUserProfile">
                 <text class="cuIcon-people"></text>
             </button>
         </block>

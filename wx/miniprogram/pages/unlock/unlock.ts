@@ -1,4 +1,5 @@
 import { routing } from "../../utils/routing"
+import { IAppOption } from "../../appoption";
 
 // pages/unlock/unlock.ts
 const shareLocationKey = "share_location"
@@ -20,14 +21,33 @@ Page({
   /**
    * Lifecycle function--Called when page load
    */
-  onLoad(opt: Record<'car_id', string>) {
+  async onLoad(opt: Record<'car_id', string>) {
     const o: routing.LockOpts = opt
     console.log('unlocking car', o.car_id)
-    if (wx.getUserProfile) {
-      this.setData({
-        canIUseGetUserProfile: true,
-      })
-    }
+    // if (wx.getUserProfile) {
+    //   this.setData({
+    //     canIUseGetUserProfile: true,
+    //   })
+    // }
+
+    // wx.getUserProfile
+    // this.setData({
+    //   canIUseGetUserProfile: true,
+    // })
+    wx.getUserProfile({
+      lang: 'zh_CN',
+      desc: '用户登录',
+      success: () => {
+      },
+      // 失败回调
+      fail: (res) => {
+        // 弹出错误
+        console.log(res)
+      }
+    })
+    this.setData({
+      canIUseGetUserProfile: true,
+    })
   },
 
   /**
@@ -79,12 +99,12 @@ Page({
 
   },
 
-  getUserProfile(e) {
+  getUserProfile() {
     // 推荐使用wx.getUserProfile获取用户信息，开发者每次通过该接口获取用户个人信息均需用户确认
     // 开发者妥善保管用户快速填写的头像昵称，避免重复弹窗
     wx.getUserProfile({
       desc: '用于实时展示用户头像', // 声明获取用户个人信息后的用途，后续会展示在弹窗中，请谨慎填写
-      success: (res) => {
+      success: (res: any) => {
         getApp<IAppOption>().resolveUserInfo(res.userInfo)
         this.setData({
           avatarUrl: res.userInfo.avatarUrl,
@@ -117,32 +137,53 @@ Page({
     wx.getLocation({
       type: 'gcj02',
       success: (loc) => {
-        //todo  模拟后端数据
-        console.log('starting a trip', {
-          location: {
-            latitude: loc.latitude,
-            longituge: loc.longitude,
+        //TODO  send request to server to start a trip
+        // 协议 http
+        // 服务器地址 api.happycar.cn
+        // 路径 /trip
+        // 参数 
+        // 数据类型
+        // 数据编码 JSON
+        // 安全性 header 带上token
+        // 错误处理
+        //! starting a trip
+        wx.request({
+          url: 'https://api.happycar.cn/trip',
+          dataType: 'json',
+          data: {
+            location: {
+              latitude: loc.latitude,
+              longitude: loc.longitude,
+            },
+            avatarUrl: this.data.shareLocation ? this.data.avatarUrl : '',
           },
-          // todo 需要和后端双向绑定（shareLocation）
-          avatarUrl: this.data.shareLocation ? this.data.avatarUrl : '',
-          carID: 0
-        })
-        const tripID = 'trip456'
-        wx.showLoading({
-          title: '开锁中',
-          mask: true, // 让页面不能点击
-        })
-        setTimeout(() => {
-          wx.redirectTo({
-            //url: `/pages/driving/driving?trip_id=${tripID}`,
-            url: routing.driving({
-              trip_id: tripID,
-            }),
-            complete: () => {
-              wx.hideLoading()
+          header: {
+            authorization: 'jf32i9r89h' // toke
+          },
+          method: 'POST',
+          responseType: 'text', // 和后端两个人共同商讨
+          success: (res) => {
+            if (res.statusCode === 200) {
+              // const tripID = res.data.tripID
+              const tripID = '123'
+              wx.showLoading({
+                title: '开锁中',
+                mask: true, // 让页面不能点击
+              })
+              setTimeout(() => {
+                wx.redirectTo({
+                  //url: `/pages/driving/driving?trip_id=${tripID}`,
+                  url: routing.driving({
+                    trip_id: tripID,
+                  }),
+                  complete: () => {
+                    wx.hideLoading()
+                  }
+                })
+              }, 2000)
             }
-          })
-        }, 2000)
+          }
+        })
       },
       fail: () => {
         wx.showToast({

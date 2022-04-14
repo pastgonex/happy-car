@@ -3,11 +3,10 @@
   "packOptions": {
     "ignore": []
   },
-  "miniprogramRoot": "miniprogram/",
   "compileType": "miniprogram",
-  "projectname": "wx",
+  "projectname": "happy-car",
   "setting": {
-    "urlCheck": true,
+    "urlCheck": false,
     "es6": true,
     "enhance": true,
     "postcss": true,
@@ -49,5 +48,6 @@
   "simulatorType": "wechat",
   "simulatorPluginLibVersion": {},
   "appid": "wx9740e11be9fb446a",
+  "libVersion": "2.23.4",
   "condition": {}
 }

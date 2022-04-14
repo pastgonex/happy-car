@@ -86,11 +86,29 @@ Page({
   onLoad() {
 
     this.populateTrips()
-    if (wx.getUserProfile) {
-      this.setData({
-        canIUseGetUserProfile: true,
-      })
-    }
+    // if (wx.getUserProfile) {
+    //   this.setData({
+    //     canIUseGetUserProfile: true,
+    //   })
+    // }
+    // wx.getUserProfile
+    // this.setData({
+    //   canIUseGetUserProfile: true,
+    // })
+    wx.getUserProfile({
+      lang: 'zh_CN',
+      desc: '用户登录',
+      success: () => {
+      },
+      // 失败回调
+      fail: (res) => {
+        // 弹出错误
+        console.log(res)
+      }
+    })
+    this.setData({
+      canIUseGetUserProfile: true,
+    })
   },
   populateTrips() {
     // const trips: Trip[] = [] // 限定类型， 做保护
@@ -137,6 +155,7 @@ Page({
       // trips: trips, // trips, 这样写， 就不用写 trips: trips 
       mainItems,
       navItems,
+      navSel,
     }, () => {
       this.prepareScrollStates()
     })
@@ -210,7 +229,7 @@ Page({
   onShareAppMessage() {
 
   },
-  onSwiperChange(e) {
+  onSwiperChange(e: any) {
     // console.log(e)
     // 自动变的
     if (!e.detail.source) {
@@ -219,7 +238,7 @@ Page({
     }
     // todo process
   },
-  onPromotionItemTap(e) {
+  onPromotionItemTap(e: any) {
     // console.log(e)
     const promotionID = e.currentTarget.dataset.promotionid
     if (promotionID) {
@@ -232,19 +251,16 @@ Page({
       url: routing.register(),
     })
   },
-  getUserProfile(e) {
+
+  // TODO  
+  getUserProfile() {
     // 推荐使用wx.getUserProfile获取用户信息，开发者每次通过该接口获取用户个人信息均需用户确认
     // 开发者妥善保管用户快速填写的头像昵称，避免重复弹窗
     wx.getUserProfile({
       desc: '用于实时展示用户头像', // 声明获取用户个人信息后的用途，后续会展示在弹窗中，请谨慎填写
-      success: (res) => {
-        // console.log(res.userInfo)
-        // console.log(getApp<IAppOption>().globalData.userInfo)
-        this.setData({
-          avatarUrl: res.userInfo.avatarUrl,
-          userInfo: res.userInfo,
-          hasUserInfo: true,
-        })
+      success: (res: any) => {
+        this.data.avatarUrl = res.avatarUrl
+        this.data.hasUserInfo = true
       }
     })
   },
@@ -274,5 +290,5 @@ Page({
       navSel: selItem.dataset.navId,
       navScroll: selItem.dataset.navScrollId
     })
-  }
+  },
 })

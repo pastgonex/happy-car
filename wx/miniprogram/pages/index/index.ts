@@ -1,4 +1,5 @@
 import { routing } from "../../utils/routing"
+import {IAppOption} from "../../appoption";
 
 Page({
   isPageShowing: false,

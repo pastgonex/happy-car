@@ -1,6 +1,4 @@
-/// <reference path="./types/index.d.ts" />
-
-interface IAppOption {
+export interface IAppOption {
   globalData: {
     // userInfo?: WechatMiniprogram.UserInfo,
     userInfo: Promise<WechatMiniprogram.UserInfo>,

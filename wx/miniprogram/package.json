@@ -10,6 +10,8 @@
   "author": "",
   "license": "",
   "dependencies": {
+    "camelcase-keys": "^6.2.2",
+    "protobufjs": "^6.11.2"
   },
   "devDependencies": {
     "miniprogram-api-typings": "^3.4.5",

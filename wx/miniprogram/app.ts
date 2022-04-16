@@ -1,5 +1,7 @@
 import { getSetting, getUserInfo } from "./utils/wxapi"
-import {IAppOption} from "./appoption";
+import { IAppOption } from "./appoption";
+import { happycar } from "./service/proto_gen/trip_pb";
+import camelcaseKeys from "camelcase-keys";
 
 let resolveUserInfo: (value: WechatMiniprogram.UserInfo | PromiseLike<WechatMiniprogram.UserInfo>) => void
 let rejectUserInfo: (reason?: any) => void
@@ -15,15 +17,23 @@ App<IAppOption>({
     })
   },
   async onLaunch() {
-    wx.request({
-      url: 'http://localhost:8080/trip/trip123',
-      method: 'GET',
-      success: res => {
-        const getTripResp = res.data
-        console.log(getTripResp)
-      },
-      fail: console.error
-    })
+    // wx.request({
+    //   url: 'http://localhost:8080/trip/trip123',
+    //   method: 'GET',
+    //   success: res => {
+    //     const getTripRes = happycar.GetTripResponse.fromObject(camelcaseKeys(res.data as object, {
+    //       deep: true, // 对象的所有层级， 所有的key都改成驼峰
+    //     }))
+    //     // const getTripRes = happycar.GetTripResponse.fromObject(res.data as object)
+    //     console.log(getTripRes)
+
+    //     console.log('status is', happycar.TripStatus[getTripRes.trip?.status!])
+        
+    //   },
+    //   fail: console.error
+    // })
+
+
     // 展示本地存储能力
     const logs = wx.getStorageSync('logs') || []
     logs.unshift(Date.now())

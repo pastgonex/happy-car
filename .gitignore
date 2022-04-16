@@ -16,3 +16,5 @@
 # wechat-miniapp
 wx/miniprogram/**/*.js
 node_modules
+
+.DS_Store

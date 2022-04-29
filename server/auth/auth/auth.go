@@ -7,11 +7,14 @@ import (
 	"google.golang.org/grpc/status"
 	"happy-car/auth/api/gen/v1"
 	"happy-car/auth/auth/dao"
+	"time"
 )
 
 type Service struct {
 	OpenIdResolver OpenIdResolver
 	Mongo          *dao.Mongo
+	TokenGenerator TokenGenerator
+	TokenExpire    time.Duration
 	Logger         *zap.Logger
 }
 
@@ -19,6 +22,11 @@ type Service struct {
 // resolves an authorization code to an openid.
 type OpenIdResolver interface {
 	Resolve(code string) (string, error)
+}
+
+// TokenGenerator generates a token for the specified account.
+type TokenGenerator interface {
+	GenerateToken(accountID string, expire time.Duration) (string, error)
 }
 
 func (s *Service) Login(ctx context.Context, request *authpb.LoginRequest) (*authpb.LoginResponse, error) {
@@ -34,8 +42,15 @@ func (s *Service) Login(ctx context.Context, request *authpb.LoginRequest) (*aut
 		return nil, status.Error(codes.Internal, "")
 	}
 
+	token, err := s.TokenGenerator.GenerateToken(accountID, s.TokenExpire)
+	if err != nil {
+		s.Logger.Error("cannot generate token", zap.Error(err))
+		return nil, status.Error(codes.Internal, "")
+	}
+
 	return &authpb.LoginResponse{
-		AccessToken: "token for accountID " + accountID,
-		ExpiresIn:   7200,
+		//AccessToken: "token for accountID " + accountID,
+		AccessToken: token,
+		ExpiresIn:   int32(s.TokenExpire.Seconds()),
 	}, nil
 }

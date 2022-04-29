@@ -11,4 +11,3 @@ cat ${PBTS_OUT_DIR}/trip_pb_temp.js >> ${PBTS_OUT_DIR}/trip_pb.js
 rm ${PBTS_OUT_DIR}/trip_pb_temp.js
 
 ${PBTS_BIN}/pbts -o ${PBTS_OUT_DIR}/trip_pb.d.ts ${PBTS_OUT_DIR}/trip_pb.js 
-

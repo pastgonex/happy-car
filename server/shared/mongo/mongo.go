@@ -1,4 +1,4 @@
-package mgo
+package mongo
 
 import (
 	"go.mongodb.org/mongo-driver/bson"
@@ -14,5 +14,11 @@ type ObjID struct {
 func Set(v interface{}) bson.M {
 	return bson.M{
 		"$set": v,
+	}
+}
+
+func SetOnInsert(v interface{}) bson.M {
+	return bson.M{
+		"$setOnInsert": v,
 	}
 }

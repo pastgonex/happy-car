@@ -1,0 +1,15 @@
+syntax = "proto3";
+package rental.v1;
+option go_package = "happycar/rental/api/gen/v1;rentalpb";
+
+message CreateTripRequest {
+  string start = 1; // 随意写一个参数， 读出来就行
+}
+
+message CreateTripResponse {
+  string id = 1;
+}
+
+service TripService {
+  rpc CreateTrip(CreateTripRequest) returns (CreateTripResponse) {}
+}

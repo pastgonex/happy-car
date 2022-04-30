@@ -18,3 +18,5 @@ wx/miniprogram/**/*.js
 node_modules
 
 .DS_Store
+private.key
+public.key 

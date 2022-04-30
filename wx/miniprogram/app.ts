@@ -1,7 +1,6 @@
 import {getSetting, getUserInfo} from "./utils/wxapi"
 import {IAppOption} from "./appoption";
-import {auth} from "./service/proto_gen/auth/auth_pb";
-import camelcaseKeys from "camelcase-keys";
+import {Happycar} from "./service/request";
 // import { happycar } from "./service/proto_gen/trip_pb";
 // import camelcaseKeys from "camelcase-keys";
 
@@ -39,29 +38,46 @@ App<IAppOption>({
         // wx.setStorageSync('logs', logs)
 
         // 登录 静默登录
-        wx.login({
-            success: res => {
-                // 发送 res.code 到后台换取 openId, sessionKey, unionId
-                wx.request({
-                    url: 'http://localhost:8080/v1/auth/login',
-                    method: 'POST',
-                    data: {
-                        code: res.code
-                    } as auth.v1.ILoginRequest,
-                    success: res => {
-                        const loginResponse: auth.v1.ILoginResponse =
-                            auth.v1.LoginResponse.fromObject(
-                                camelcaseKeys(res.data as object, {deep: true})
-                            )
-                        console.log(loginResponse)
-                    },
-                    fail: res => {
-                        console.error(res)
-                    }
-                })
-            },
-        })
+        // wx.login({
+        //     success: res => {
+        //         // 发送 res.code 到后台换取 openId, sessionKey, unionId
+        //         wx.request({
+        //             url: 'http://localhost:8080/v1/auth/login',
+        //             method: 'POST',
+        //             data: {
+        //                 code: res.code
+        //             } as auth.v1.ILoginRequest,
+        //             success: res => {
+        //                 const loginResponse: auth.v1.ILoginResponse =
+        //                     auth.v1.LoginResponse.fromObject(
+        //                         camelcaseKeys(res.data as object, {deep: true})
+        //                     )
+        //                 console.log(loginResponse)
+        //                 wx.request({
+        //                     url: 'http://localhost:8080/v1/trip',
+        //                     method: 'POST',
+        //                     data: {
+        //                         start: "abc",
+        //                     } as rental.v1.ICreateTripRequest,
+        //                     header: {
+        //                         // 业界规范，Bearer加上token
+        //                         authorization: 'Bearer ' + loginResponse.accessToken,
+        //                     },
+        //                     fail: res => {
+        //                         console.log(res)
+        //                     }
+        //                 })
+        //             },
+        //             fail: res => {
+        //                 console.error(res)
+        //             }
+        //         })
+        //     },
+        // })
         //* 获取用户信息
+
+        // 登录
+        Happycar.login()
         try {
             const setting = await getSetting()
             if (setting.authSetting['scope.userInfo']) {

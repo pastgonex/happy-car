@@ -6,10 +6,10 @@ RUN go env -w GO111MODULE=on
 RUN go env -w GOPROXY=https://goproxy.cn,direct
 
 # 拷贝源代码到镜像中
-COPY . /go/src/coolcar/server
+COPY . /go/src/happycar/server
 
 # 编译
-WORKDIR /go/src/coolcar/server
+WORKDIR /go/src/happycar/server
 RUN go mod download && go mod verify
 RUN go install ./blob/...
 

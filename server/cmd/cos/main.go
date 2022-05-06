@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/tencentyun/cos-go-sdk-v5"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/tencentyun/cos-go-sdk-v5"
 )
 
 func main() {
@@ -21,8 +22,8 @@ func main() {
 	su, _ := url.Parse("https://cos.COS_REGION.myqcloud.com")
 	b := &cos.BaseURL{BucketURL: u, ServiceURL: su}
 
-	secID := "AKIDdIjwuc4cR0bpsgyFgMZ6kCqJkxf9MWYL"
-	secretKey := "5zllVp30Tkl9OPANM0Rirrytdjo6RecM"
+	secID := "xxx"
+	secretKey := "xxx"
 	// 1.永久密钥
 	client := cos.NewClient(b, &http.Client{
 		Transport: &cos.AuthorizationTransport{

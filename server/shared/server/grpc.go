@@ -1,23 +1,28 @@
 package server
 
 import (
-	"go.uber.org/zap"
-	"google.golang.org/grpc"
 	"happy-car/shared/auth"
 	"net"
+
+	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	"google.golang.org/grpc/health/grpc_health_v1"
 )
 
+// GRPCConfig defines a grpc server.
 type GRPCConfig struct {
 	Name              string
-	Addr              string // 地址
+	Addr              string
 	AuthPublicKeyFile string
 	RegisterFunc      func(*grpc.Server)
 	Logger            *zap.Logger
 }
 
+// RunGRPCServer runs a grpc server.
 func RunGRPCServer(c *GRPCConfig) error {
 	nameField := zap.String("name", c.Name)
-	listen, err := net.Listen("tcp", c.Addr)
+	lis, err := net.Listen("tcp", c.Addr)
 	if err != nil {
 		c.Logger.Fatal("cannot listen", nameField, zap.Error(err))
 	}
@@ -30,10 +35,11 @@ func RunGRPCServer(c *GRPCConfig) error {
 		}
 		opts = append(opts, grpc.UnaryInterceptor(in))
 	}
-	// 创建grpc server，没有注册，且没有开始接受request
+
 	s := grpc.NewServer(opts...)
-	c.RegisterFunc(s) // 怎么Register由代码实现者实现
+	c.RegisterFunc(s)
+	grpc_health_v1.RegisterHealthServer(s, health.NewServer())
 
 	c.Logger.Info("server started", nameField, zap.String("addr", c.Addr))
-	return s.Serve(listen)
+	return s.Serve(lis)
 }

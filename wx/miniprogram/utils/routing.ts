@@ -1,10 +1,8 @@
-// 这里一定要保证正确
 export namespace routing {
     export interface DrivingOpts {
         trip_id: string
     }
 
-    // 使用方式: routing.driving()
     export function driving(o: DrivingOpts) {
         return `/pages/driving/driving?trip_id=${o.trip_id}`
     }
@@ -13,17 +11,15 @@ export namespace routing {
         car_id: string
     }
 
-    export function unlock(o: LockOpts) {
-        return `/pages/unlock/unlock?car_id=${o.car_id}`
+    export function lock(o: LockOpts) {
+        return `/pages/lock/lock?car_id=${o.car_id}`
     }
 
-
-    // 使用Typescript作为限制
     export interface RegisterOpts {
         redirect?: string
     }
 
-    export interface  RegisterParams {
+    export interface RegisterParams {
         redirectURL: string
     }
 
@@ -38,5 +34,4 @@ export namespace routing {
     export function mytrips() {
         return '/pages/mytrips/mytrips'
     }
-
 }

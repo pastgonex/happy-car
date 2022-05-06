@@ -1,4 +1,3 @@
-<!-- pages/unlock/unlock.wxml -->
 <view class="container">
     <view class="static">
         <image class="sedan" src="/resources/sedan.png" />
@@ -8,25 +7,16 @@
         </view>
     </view>
     <view class="avatar-container">
-        <!-- <button wx:if="{{!avatarURL}}" class="cu-avatar round lg bg-grey margin-xs" open-type="getUserInfo" bindgetuserinfo="onGetUserInfo">
+        <button wx:if="{{!avatarURL}}" class="cu-avatar round lg bg-grey margin-xs"
+                open-type="getUserInfo" bindgetuserinfo="onGetUserInfo">
             <text class="cuIcon-people"></text>
         </button>
         <view wx:if="{{avatarURL}}" class="switch-container">
-            <image class="cu-avatar round lg bg-grey margin-xs" src="{{avatarURL}}" />
+            <image class="cu-avatar round lg bg-grey margin-xs"
+                   src="{{avatarURL}}"/>
             <switch bindchange="onShareLocation" checked="{{shareLocation}}" />
-        </view> -->
-        <block wx:if="{{!hasUserInfo}}">
-            <button wx:if="{{canIUseGetUserProfile}}" class="cu-avatar round lg bg-grey margin-xs" open-type="getUserProfile" bindtap="getUserProfile">
-                <text class="cuIcon-people"></text>
-            </button>
-        </block>
-        <block wx:else>
-            <view >
-                <image class="cu-avatar round lg bg-grey margin-xs" src="{{avatarUrl}}" mode="cover"></image>
-                <switch bindchange="onShareLocation" checked="{{shareLocation}}" />
-            </view>
-        </block>
-        <view class="margin-top">实时行程</view>
+        </view>
+        <view class="margin-top">实时展示我的头像</view>
     </view>
     <button style="width:80%" class="bg-grey lg" bindtap="onUnlockTap">立即开锁</button>
 </view>

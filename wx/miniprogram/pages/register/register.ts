@@ -1,146 +1,146 @@
+import { ProfileService } from "../../service/profile"
+import { rental } from "../../service/proto_gen/rental/rental_pb"
+import { padString } from "../../utils/format"
 import { routing } from "../../utils/routing"
+import {Happycar} from "../../service/request";
 
-// pages/register/register.ts
+function formatDate(millis: number) {
+    const dt = new Date(millis)
+    const y = dt.getFullYear()
+    const m = dt.getMonth() + 1
+    const d = dt.getDate()
+    return `${padString(y)}-${padString(m)}-${padString(d)}`
+}
+
 Page({
+    redirectURL: '',
+    profileRefresher: 0,
 
-  /**
-   * Page initial data
-   */
-  redirectURL: '',
+    data: {
+        licNo: '',
+        name: '',
+        genderIndex: 0,
+        genders: ['未知', '男', '女'],
+        birthDate: '1990-01-01',
+        licImgURL: '',
+        state: rental.v1.IdentityStatus[rental.v1.IdentityStatus.UNSUBMITTED],
+    },
 
-  data: {
-    genders: ['未知', '男', '女', '其他'],
-    genderIndex: 0,
-    // licImgURL: undefined as string | undefined,
-    licImgURL: '',
-    birthDate: '1990-01-01',
-    licNo: '',
-    name: '',
-    state: 'UNSUBMITTED' as 'UNSUBMITTED' | 'PENDING' | 'VERIFIED',
-  },
+    renderProfile(p: rental.v1.IProfile) {
+        this.renderIdentity(p.identity!)
+        this.setData({
+            state: rental.v1.IdentityStatus[p.identityStatus||0],
+        })
+    },
 
-  /**
-   * Lifecycle function--Called when page load
-   */
-  onLoad(opt: Record<'redirect', string>) {
-    const o: routing.RegisterOpts = opt
-    if (o.redirect) {
-      this.redirectURL = decodeURIComponent(o.redirect)
-      // console.log(this.redirectURL)
-    }
-  },
+    renderIdentity(i?: rental.v1.IIdentity) {
+        this.setData({
+            licNo: i?.licNumber||'',
+            name: i?.name||'',
+            genderIndex: i?.gender||0,
+            birthDate: formatDate(i?.birthDateMillis||0),
+        })
+    },
 
-  /**
-   * Lifecycle function--Called when page is initially rendered
-   */
-  onReady() {
-
-  },
-
-  /**
-   * Lifecycle function--Called when page show
-   */
-  onShow() {
-
-  },
-
-  /**
-   * Lifecycle function--Called when page hide
-   */
-  onHide() {
-
-  },
-
-  /**
-   * Lifecycle function--Called when page unload
-   */
-  onUnload() {
-
-  },
-
-  /**
-   * Page event handler function--Called when user drop down
-   */
-  onPullDownRefresh() {
-
-  },
-
-  /**
-   * Called when page reach bottom
-   */
-  onReachBottom() {
-
-  },
-
-  /**
-   * Called when user click on the top right corner to share
-   */
-  onShareAppMessage() {
-
-  },
-  onUploadLic() {
-    // console.log("on clicked")
-    wx.chooseImage({
-      success: res => {
-        // console.log(res)
-        if (res.tempFilePaths.length > 0) {
-          this.setData({
-            licImgURL: res.tempFilePaths[0]
-          })
-          // Todo upload image  模拟上传照片之后的操作 （自动识别驾照中的信息）
-          setTimeout(() => {
-            this.setData({
-              licNo: '12345678901234567890',
-              name: 'Ever Ni',
-              genderIndex: 1,
-              birthDate: '2000-08-05'
-            })
-          })
+    onLoad(opt: Record<'redirect', string>) {
+        const o: routing.RegisterOpts = opt
+        if(o.redirect) {
+            this.redirectURL = decodeURIComponent(o.redirect)
         }
-      }
-    })
-  },
-  // 性别选择后的结果
-  onGenderChange(e: any) {
-    this.setData({
-      genderIndex: e.detail.value,
+        ProfileService.getProfile().then(p => this.renderProfile(p))
+        ProfileService.getProfilePhoto().then(p => {
+            this.setData({
+                licImgURL: p.url||'',
+            })
+        })
+    },
 
-    })
-  },
+    onUploadLic() {
+        wx.chooseImage({
+            success: async res => {
+                if (res.tempFilePaths.length === 0) {
+                    return
+                }
+                this.setData({
+                    licImgURL: res.tempFilePaths[0]
+                })
+                const photoRes = await ProfileService.createProfilePhoto()
+                if (!photoRes.uploadUrl) {
+                    return
+                }
+                await Happycar.uploadfile({
+                    localPath: res.tempFilePaths[0],
+                    url: photoRes.uploadUrl,
+                })
+                const identity = await ProfileService.completeProfilePhoto()
+                this.renderIdentity(identity)
+            }
+        })
+    },
 
-  // 日期选择后的结果
-  onBirthDateChange(e: any) {
-    this.setData({
-      birthDate: e.detail.value,
-    })
-  },
+    onGenderChange(e: any) {
+        this.setData({
+            genderIndex: parseInt(e.detail.value),
+        })
+    },
 
-  // 递交审查
-  onSubmit() {
-    // TODO: submit the form to server
-    this.setData({
-      state: 'PENDING'
-    })
-    // TODO: 模拟服务器审查
-    setTimeout(() => {
-      this.onLicVerified()
-    }, 3000)
-  },
-  onResubmit() {
-    this.setData({
-      // 先清掉数据
-      state: 'UNSUBMITTED',
-      licImgURL: '',
-    })
-  },
-  onLicVerified() {
-    this.setData({
-      state: 'VERIFIED',
-    })
-    if (this.redirectURL) {
-      wx.redirectTo ({
-        url: this.redirectURL,
-      })
+    onBirthDateChange(e: any) {
+        this.setData({
+            birthDate: e.detail.value,
+        })
+    },
+
+    onSubmit() {
+        ProfileService.submitProfile({
+            licNumber: this.data.licNo,
+            name: this.data.name,
+            gender: this.data.genderIndex,
+            birthDateMillis: Date.parse(this.data.birthDate),
+        }).then(p => {
+            this.renderProfile(p)
+            this.scheduleProfileRefresher()
+        })
+    },
+
+    onUnload() {
+        this.clearProfileRefresher()
+    },
+
+    scheduleProfileRefresher() {
+        this.profileRefresher = setInterval(() => {
+            ProfileService.getProfile().then(p => {
+                this.renderProfile(p)
+                if (p.identityStatus !== rental.v1.IdentityStatus.PENDING) {
+                    this.clearProfileRefresher()
+                }
+                if (p.identityStatus === rental.v1.IdentityStatus.VERIFIED) {
+                    this.onLicVerified()
+                }
+            })
+        }, 1000)
+    },
+
+    clearProfileRefresher() {
+        if (this.profileRefresher) {
+            clearInterval(this.profileRefresher)
+            this.profileRefresher = 0
+        }
+    },
+
+    onResubmit() {
+        ProfileService.clearProfile().then(p => this.renderProfile(p))
+        ProfileService.clearProfilePhoto().then(() => {
+            this.setData({
+                licImgURL: '',
+            })
+        })
+    },
+
+    onLicVerified() {
+        if (this.redirectURL) {
+            wx.redirectTo({
+                url: this.redirectURL,
+            })
+        }
     }
-  },
 })

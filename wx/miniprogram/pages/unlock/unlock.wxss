@@ -1,4 +1,3 @@
-/* pages/unlock/unlock.wxss */
 page {
     height: 100%;
 }
@@ -9,16 +8,13 @@ page {
     padding-bottom: 100rpx;
 }
 
-.static {
-    text-align: center
-}
 .sedan {
     width: 600rpx;
     height: 360rpx;
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+}
+
+.static {
+    text-align: center;
 }
 
 .unlock {

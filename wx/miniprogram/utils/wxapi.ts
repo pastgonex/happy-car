@@ -36,4 +36,3 @@ export function getUserInfo(): Promise<WechatMiniprogram.GetUserInfoSuccessCallb
     })
   })
 }
-

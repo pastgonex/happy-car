@@ -1,18 +1,38 @@
+import { IAppOption } from "../../appoption"
+import { CarService } from "../../service/car"
+import { ProfileService } from "../../service/profile"
+import { rental } from "../../service/proto_gen/rental/rental_pb"
+import { TripService } from "../../service/trip"
 import { routing } from "../../utils/routing"
-import {IAppOption} from "../../appoption";
+
+interface Marker {
+  iconPath: string
+  id: number
+  latitude: number
+  longitude: number
+  width: number
+  height: number
+}
+
+const defaultAvatar = '/resources/car.png'
+const initialLat = 29.761267625855936
+const initialLng = 121.87264654736123
 
 Page({
   isPageShowing: false,
+  socket: undefined as WechatMiniprogram.SocketTask | undefined,
+
   data: {
-    userInfo: {},
+    avatarURL: '',
     setting: {
       skew: 0,
       rotate: 0,
       showLocation: true,
       showScale: true,
-      subKey: "",
+      subKey: '',
       layerStyle: -1,
       enableZoom: true,
+      enableScroll: true,
       enableRotate: false,
       showCompass: false,
       enable3D: false,
@@ -21,135 +41,166 @@ Page({
       enableTraffic: false,
     },
     location: {
-      latitude: 31,
-      longitude: 120,
+      latitude: initialLat,
+      longitude: initialLng,
     },
-    scale: 10,
-    markers: [{
-      iconPath: "/resources/car.png",
-      id: 0,
-      latitude: 23.099994,
-      longitude: 113.324520,
-      width: 25,
-      height: 25,
-    },
-    {
-      iconPath: "/resources/car.png",
-      id: 1,
-      latitude: 23.099994,
-      longitude: 114.324520,
-      width: 25,
-      height: 25,
-    }],
+    scale: 16,
+    markers: [] as Marker[],
   },
+
   async onLoad() {
-    const UserInfo = await getApp<IAppOption>().globalData.userInfo
+    const userInfo = await getApp<IAppOption>().globalData.userInfo
     this.setData({
-      userInfo: UserInfo
+      avatarURL: userInfo.avatarUrl,
     })
   },
-  onShow() {
 
-  },
-  onHide() {
-    this.isPageShowing = false
-  },
   onMyLocationTap() {
     wx.getLocation({
-      type: "gcj02",
+      type: 'gcj02',
       success: res => {
         this.setData({
           location: {
             latitude: res.latitude,
             longitude: res.longitude,
-          }
+          },
         })
       },
       fail: () => {
         wx.showToast({
-          icon: "none",
-          title: "请前往设置页授权"
+          icon: 'none',
+          title: '请前往设置页授权',
         })
       }
     })
   },
-  onScanTap() {
-    wx.scanCode({
-      // onlyFromCamera: false,
-      success: () => {
-        wx.showModal({
-          title: "身份认证",
-          content: "需要身份认证才能租车",
-          success: (res) => {
-            if (res.confirm) {
-              // console.log(res)
-              // todo get car id from scan result 
-              const carID = 'car123'
-              // const redirectURL = `/pages/unlock/unlock?car_id=${carID}`
-              const redirectURL = routing.unlock({
-                car_id: carID
-              })
-              wx.navigateTo({
-                // url: `/pages/register/register?redirect=${encodeURIComponent(redirectURL)}`,
-                url: routing.register({
-                  redirectURL: redirectURL
-                })
-              })
-              // todo
-            } else if (res.cancel) {
-              console.log('用户点击取消')
-            }
 
-          },
-          fail: () => {
-
-          }
-        })
-      },
-      fail: res => {
-        console.log(res)
-      }
-    })
-  },
-  moveCars() {
-    const map = wx.createMapContext("map") // map的id
-    const dest = {
-      // latitude: 23.099994,
-      // longitude: 113.324520,
-      latitude: this.data.markers[0].latitude,
-      longitude: this.data.markers[0].longitude,
+  async onScanTap() {
+    const trips = await TripService.getTrips(rental.v1.TripStatus.IN_PROGRESS)
+    if ((trips.trips?.length || 0) > 0) {
+      await this.selectComponent('#tripModal').showModal()
+      wx.navigateTo({
+        url: routing.driving({
+          trip_id: trips.trips![0].id!,
+        }),
+      })
+      return
     }
-    // 做成一个回调函数，每隔一段时间调用一次
-    const moveCar = () => {
-      dest.latitude += 0.1
-      dest.longitude += 0.1
-      map.translateMarker({
-        destination: {
-          latitude: dest.latitude,
-          longitude: dest.longitude,
-        },
-        markerId: 0,
-        autoRotate: false,
-        rotate: 0,
-        duration: 5000,
-        animationEnd: () => {
-          if (this.isPageShowing) {
-            this.data.markers[0].latitude = dest.latitude
-            this.data.markers[0].longitude = dest.longitude
-            moveCar()
-          } else {
-            this.data.markers[0].latitude = dest.latitude
-            this.data.markers[0].longitude = dest.longitude
-          }
-        },
+    wx.scanCode({
+      success: async () => {
+        // TODO: get car id from scan result
+        const carID='60af01e5a21ead3dccbcd1d8'
+        const lockURL = routing.lock({
+          car_id: carID,
+        })
+        const prof = await ProfileService.getProfile()
+        if (prof.identityStatus === rental.v1.IdentityStatus.VERIFIED) {
+          wx.navigateTo({
+            url: lockURL,
+          })
+        } else {
+          await this.selectComponent('#licModal').showModal()
+          wx.navigateTo({
+            url: routing.register({
+              redirectURL: lockURL,
+            })
+          })
+        }
+      },
+      fail: console.error,
+    })
+  },
+
+  onShow() {
+    this.isPageShowing = true;
+    if (!this.socket) {
+      this.setData({
+        markers: []
+      }, () => {
+        this.setupCarPosUpdater()
       })
     }
-    moveCar()
   },
+
+  onHide() {
+    this.isPageShowing = false;
+    if (this.socket) {
+      this.socket.close({
+        success: () => {
+          this.socket = undefined
+        }
+      })
+    }
+  },
+
   onMyTripsTap() {
     wx.navigateTo({
-      // url: '/pages/mytrips/mytrips',
-      url: routing.mytrips()
+      url: routing.mytrips(),
     })
-  }
-})   
+  },
+
+  setupCarPosUpdater() {
+    const map = wx.createMapContext("map")
+    const markersByCarID = new Map<string, Marker>()
+    let translationInProgress = false
+    const endTranslation = () => {
+      translationInProgress = false
+    }
+    this.socket = CarService.subscribe(car => {
+      if (!car.id || translationInProgress || !this.isPageShowing) {
+        console.log('dropped')
+        return
+      }
+      const marker = markersByCarID.get(car.id)
+      if (!marker) {
+        // Insert new marker.
+        const newMarker: Marker = {
+          id: this.data.markers.length,
+          iconPath: car.car?.driver?.avatarUrl || defaultAvatar,
+          latitude: car.car?.position?.latitude || initialLat,
+          longitude: car.car?.position?.longitude || initialLng,
+          height: 20,
+          width: 20,
+        }
+        markersByCarID.set(car.id, newMarker)
+        this.data.markers.push(newMarker)
+        translationInProgress = true
+        this.setData({
+          markers: this.data.markers,
+        }, endTranslation)
+        return
+      }
+
+      const newAvatar = car.car?.driver?.avatarUrl || defaultAvatar
+      const newLat = car.car?.position?.latitude || initialLat
+      const newLng = car.car?.position?.longitude || initialLng
+      if (marker.iconPath !== newAvatar) {
+        // Change iconPath and possibly position.
+        marker.iconPath = newAvatar
+        marker.latitude = newLat
+        marker.longitude = newLng
+        translationInProgress = true
+        this.setData({
+          markers: this.data.markers,
+        }, endTranslation)
+        return
+      }
+
+      if (marker.latitude !== newLat || marker.longitude !== newLng) {
+        // Move marker.
+        translationInProgress = true
+        map.translateMarker({
+          markerId: marker.id,
+          destination: {
+            latitude: newLat,
+            longitude: newLng,
+          },
+          autoRotate: false,
+          rotate: 0,
+          duration: 80,
+          animationEnd: endTranslation,
+        })
+      }
+    })
+  },
+})

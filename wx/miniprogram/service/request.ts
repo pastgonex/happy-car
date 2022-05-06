@@ -1,21 +1,21 @@
-import camelcaseKeys from "camelcase-keys";
-import {auth} from "./proto_gen/auth/auth_pb";
-
+import camelcaseKeys = require("camelcase-keys")
+import { auth } from "./proto_gen/auth/auth_pb"
 
 export namespace Happycar {
-    const serverAddr = 'http://localhost:8080'
+    export const serverAddr = 'http://81.69.182.228'
+    export const wsAddr = 'ws://81.69.182.228'
     const AUTH_ERR = 'AUTH_ERR'
 
     const authData = {
         token: '',
-        expireMs: 0,
+        expiryMs: 0,
     }
 
     export interface RequestOption<REQ, RES> {
-        method: 'GET' | 'PUT' | 'POST' | 'DELETE'
+        method: 'GET'|'PUT'|'POST'|'DELETE'
         path: string
-        data: REQ
-        respMarshaller: (r: object) => RES
+        data?: REQ
+        respMarshaller: (r: object)=>RES
     }
 
     export interface AuthOption {
@@ -31,11 +31,10 @@ export namespace Happycar {
         try {
             await login()
             return sendRequest(o, authOpt)
-        } catch (err) {
+        } catch(err) {
             if (err === AUTH_ERR && authOpt.retryOnAuthError) {
-                // 清除状态之后才能retry
                 authData.token = ''
-                authData.expireMs = 0
+                authData.expiryMs = 0
                 return sendRequestWithAuthRetry(o, {
                     attachAuthHeader: authOpt.attachAuthHeader,
                     retryOnAuthError: false,
@@ -47,12 +46,12 @@ export namespace Happycar {
     }
 
     export async function login() {
-        if (authData.token && authData.expireMs >= Date.now()) {
+        if (authData.token && authData.expiryMs >= Date.now()) {
             return
         }
         const wxResp = await wxLogin()
         const reqTimeMs = Date.now()
-        const resp = await sendRequest<auth.v1.ILoginRequest, auth.v1.ILoginResponse>({
+        const resp = await sendRequest<auth.v1.ILoginRequest, auth.v1.ILoginResponse> ({
             method: 'POST',
             path: '/v1/auth/login',
             data: {
@@ -60,23 +59,18 @@ export namespace Happycar {
             },
             respMarshaller: auth.v1.LoginResponse.fromObject,
         }, {
-            // 登录了就没有这回事情要处理了
             attachAuthHeader: false,
             retryOnAuthError: false,
         })
         authData.token = resp.accessToken!
-        authData.expireMs = reqTimeMs + resp.expiresIn! * 1000
+        authData.expiryMs = reqTimeMs + resp.expiresIn! * 1000
     }
 
-
-    function sendRequest<REQ, RES>(o: RequestOption<REQ, RES>, a?: AuthOption): Promise<RES> {
-        const authOpt = a || {
-            attachAuthHeader: true,
-        }
+    function sendRequest<REQ, RES>(o: RequestOption<REQ, RES>, a: AuthOption): Promise<RES> {
         return new Promise((resolve, reject) => {
             const header: Record<string, any> = {}
-            if (authOpt.attachAuthHeader) {
-                if (authData.token && authData.expireMs >= Date.now()) {
+            if (a.attachAuthHeader) {
+                if (authData.token && authData.expiryMs >= Date.now()) {
                     header.authorization = 'Bearer ' + authData.token
                 } else {
                     reject(AUTH_ERR)
@@ -87,18 +81,17 @@ export namespace Happycar {
                 url: serverAddr + o.path,
                 method: o.method,
                 data: o.data,
-                header: header,
+                header,
                 success: res => {
-                    if (res.statusCode === 401) { // 头部无效， token无效，过期等等
+                    if (res.statusCode === 401) {
                         reject(AUTH_ERR)
                     } else if (res.statusCode >= 400) {
                         reject(res)
-                    } else { // 真正的成功
+                    } else {
                         resolve(o.respMarshaller(
                             camelcaseKeys(res.data as object, {
-                                deep: true
-                            })
-                        ))
+                                deep: true,
+                            })))
                     }
                 },
                 fail: reject,
@@ -108,11 +101,33 @@ export namespace Happycar {
 
     function wxLogin(): Promise<WechatMiniprogram.LoginSuccessCallbackResult> {
         return new Promise((resolve, reject) => {
-                wx.login({
-                    success: resolve,
-                    fail: reject,
-                })
-            }
-        )
+            wx.login({
+                success: resolve,
+                fail: reject,
+            })
+        })
+    }
+
+    export interface UploadFileOpts {
+        localPath: string
+        url: string
+    }
+    export function uploadfile(o: UploadFileOpts): Promise<void> {
+        const data = wx.getFileSystemManager().readFileSync(o.localPath)
+        return new Promise((resolve, reject) => {
+            wx.request({
+                method: 'PUT',
+                url: o.url,
+                data,
+                success: res => {
+                    if (res.statusCode >= 400) {
+                        reject(res)
+                    } else {
+                        resolve()
+                    }
+                },
+                fail: reject,
+            })
+        })
     }
 }

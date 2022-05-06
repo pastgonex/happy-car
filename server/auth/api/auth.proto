@@ -1,19 +1,16 @@
 syntax = "proto3";
 package auth.v1;
-option go_package="happy-car/auth/api/gen/v1;authpb";
+option go_package="happycar/auth/api/gen/v1;authpb";
 
 message LoginRequest {
   string code = 1;
 }
 
 message LoginResponse {
-  // 自定义登录态
   string access_token = 1;
-  
-   // 过期时间
   int32 expires_in = 2;
 }
 
 service AuthService {
-  rpc Login(LoginRequest) returns(LoginResponse);
+  rpc Login (LoginRequest) returns (LoginResponse);
 }

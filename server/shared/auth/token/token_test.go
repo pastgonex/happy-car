@@ -94,7 +94,6 @@ func TestVerify(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			// 使用jwt提供的方法，手动设置时间
 			jwt.TimeFunc = func() time.Time {
-
 				return c.now
 			}
 			accountID, err := v.Verify(c.tkn)

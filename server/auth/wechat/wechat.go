@@ -5,19 +5,22 @@ import (
 	"github.com/medivhzhan/weapp/v2"
 )
 
+// Service implements a WeChat auth service.
 type Service struct {
-	AppId     string
+	AppID     string
 	AppSecret string
 }
 
-// Resolve 从微信后台换取openId
+// Resolve resolves authorization code to wechat open id.
 func (s *Service) Resolve(code string) (string, error) {
-	loginResponse, err := weapp.Login(s.AppId, s.AppSecret, code)
+	resp, err := weapp.Login(s.AppID, s.AppSecret, code)
 	if err != nil {
 		return "", fmt.Errorf("weapp.Login: %v", err)
 	}
-	if err := loginResponse.GetResponseError(); err != nil {
+
+	if err := resp.GetResponseError(); err != nil {
 		return "", fmt.Errorf("weapp response error: %v", err)
 	}
-	return loginResponse.OpenID, nil
+
+	return resp.OpenID, nil
 }

@@ -1,19 +1,29 @@
 package main
 
 import (
+	"flag"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/encoding/protojson"
 	authpb "happy-car/auth/api/gen/v1"
+	carpb "happy-car/car/api/gen/v1"
 	rentalpb "happy-car/rental/api/gen/v1"
 	"happy-car/shared/server"
 	"log"
 	"net/http"
 )
 
+var addr = flag.String("addr", ":8080", "address to listen")
+var authAddr = flag.String("auth_addr", "localhost:8081", "address for auth service")
+var tripAddr = flag.String("trip_addr", "localhost:8082", "address for trip service")
+var profileAddr = flag.String("profile_addr", "localhost:8082", "address for profile service")
+var carAddr = flag.String("car_addr", "localhost:8084", "address for car service")
+
 func main() {
+	flag.Parse()
+
 	logger, err := server.NewZapLogger()
 	if err != nil {
 		log.Fatalf("failed to create zap logger: %v", err)
@@ -45,13 +55,23 @@ func main() {
 	}{
 		{
 			name:         "auth",
-			addr:         "localhost:8081",
+			addr:         *authAddr,
 			registerFunc: authpb.RegisterAuthServiceHandlerFromEndpoint,
 		},
 		{
 			name:         "rental",
-			addr:         "localhost:8082",
+			addr:         *tripAddr,
 			registerFunc: rentalpb.RegisterTripServiceHandlerFromEndpoint,
+		},
+		{
+			name:         "profile",
+			addr:         *carAddr, // 和 auth开在同一个端口上
+			registerFunc: rentalpb.RegisterProfileServiceHandlerFromEndpoint,
+		},
+		{
+			name:         "car",
+			addr:         *carAddr,
+			registerFunc: carpb.RegisterCarServiceHandlerFromEndpoint,
 		},
 	}
 
@@ -65,27 +85,10 @@ func main() {
 			logger.Sugar().Fatalf("cannot register %s service: %v", s.name, err)
 		}
 	}
-
-	//// 注册auth服务
-	//err := authpb.RegisterAuthServiceHandlerFromEndpoint(
-	//	ctx, mux, "localhost:8081",
-	//	[]grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
-	//)
-	//if err != nil {
-	//	log.Fatalf("cannot register auth service: %v", err)
-	//}
-	//
-	//// 注册rental服务
-	//err = rentalpb.RegisterTripServiceHandlerFromEndpoint(
-	//	ctx, mux, "localhost:8082",
-	//	[]grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
-	//)
-	//if err != nil {
-	//	log.Fatalf("cannot register auth service: %v", err)
-	//}
-	addr := ":8080"
-	logger.Sugar().Infof("grcp gateway started at %s\n", addr)
-
-	// 启动服务
-	logger.Sugar().Fatal(http.ListenAndServe(addr, mux))
+	http.HandleFunc("/healthz", func(rw http.ResponseWriter, r *http.Request) {
+		rw.Write([]byte("ok"))
+	})
+	http.Handle("/", mux)
+	logger.Sugar().Infof("grpc gateway started at %s", *addr)
+	logger.Sugar().Fatal(http.ListenAndServe(*addr, nil))
 }
